@@ -141,9 +141,17 @@ if ! scripts/metadata.pl package_makefile tmp/.packageinfo > tmp/.packagemakefil
 	exit 1
 fi
 
+#force to save fattr to another file
+FAFILE="fattr_table.txt"
+FAFILE2="fattr_table2.txt"
+[ -e "$FAFILE" ] && rm $FAFILE
+[ ! -e "$FAFILE2" ] && touch $FAFILE2
 find squashfs-root -type f -print0 | while IFS= read -r -d '' i; do
-	p=$(getfattr $i --match='user.package' --only-values)
+	p=$(getfattr $i --match='user.package' --only-values)	
+	[ -z "$p" ] && p=$(grep "$i " "$FAFILE2" | cut -d " " -f 2)	
+
 	[ -z "$p" ] && continue
+	echo -e "$i $p" >> $FAFILE
 
 	d=$(dirname $i)
 	d=${d#squashfs-root}
@@ -156,7 +164,8 @@ find squashfs-root -type f -print0 | while IFS= read -r -d '' i; do
 	cp --preserve=mode,xattr $sd/$n $dd/$n
 done
 
-rm tmp/.packagemakefile
+#commented
+#rm tmp/.packagemakefile
 
 if [ -d squashfs-root/storage ]; then
 	mkdir $NDM_FILES_ROOT/storage
@@ -175,6 +184,7 @@ find squashfs-root -type l ! -path squashfs-root/var -print0 | while IFS= read -
 	cp --no-dereference $sd/$n $dd/$n
 done
 
-rm -rf squashfs-root
+#commented
+#rm -rf squashfs-root
 
 echo
