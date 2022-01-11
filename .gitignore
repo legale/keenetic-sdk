@@ -29,3 +29,11 @@ TAGS*~
 /fattr_table2.txt
 /squashfs-root
 #end
+
+#log files
+*.log 
+
+#packages content except Makefile
+/package/*
+!/package/*/Makefile
+

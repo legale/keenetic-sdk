@@ -43,14 +43,14 @@ package_dir () {
 }
 
 usage () {
-	echo "Usage: $0 <firmware.bin>"
+	echo "Usage: $0 <firmware.bin> <profile>"
 	echo
 	echo "Options:"
 	echo -e "\t-h - display this help and exit"
 	echo -e "\t-v - verbose"
 	echo
 	echo "Example:"
-	echo "$0 20201103_1146_Firmware-KN-2310-3.06.A.2.0-1.bin"
+	echo "$0 20201103_1146_Firmware-KN-2310-3.06.A.2.0-1.bin KN-1010"
 }
 
 NDM_FILES_ROOT=package/private/ndm/files-ndm
@@ -72,7 +72,7 @@ done
 
 shift $((OPTIND - 1))
 
-if [ $# -ne 1 ]; then
+if [ $# -gt 2 ]; then
 	usage
 	exit 0
 fi
@@ -90,7 +90,8 @@ if ! dd if=$FIRMWARE of=$TLV_FILE bs=1 count=$TLV_BLOCK_SIZE skip=$TLV_OFFSET st
 	exit 1
 fi
 
-PROFILE=$(tlv_profile $TLV_FILE)
+[ -n "$2" ] && PROFILE="$2"
+[ -z "$PROFILE" ] && PROFILE=$(tlv_profile $TLV_FILE)
 if [ -z "$PROFILE" ]; then
 	echo "Unable to detect device."
 	rm $TLV_FILE
@@ -113,7 +114,7 @@ echo -e "components:\t$COMPONENTS"
 echo
 
 message "[Configuring]"
-if ! echo $COMPONENTS | ./configure.sh -pmanual $PROFILE; then
+if ! echo $COMPONENTS | /bin/bash -x ./configure.sh -pmanual $PROFILE; then
 	echo "Unable to configure."
 	exit 1
 fi
@@ -148,7 +149,7 @@ FAFILE2="fattr_table2.txt"
 [ ! -e "$FAFILE2" ] && touch $FAFILE2
 find squashfs-root -type f -print0 | while IFS= read -r -d '' i; do
 	p=$(getfattr $i --match='user.package' --only-values)	
-	[ -z "$p" ] && p=$(grep "$i " "$FAFILE2" | cut -d " " -f 2)	
+	[ -z "$p" ] && p=$(grep -m 1 "$i " "$FAFILE2" | cut -d " " -f 2)	
 
 	[ -z "$p" ] && continue
 	echo -e "$i $p" >> $FAFILE
