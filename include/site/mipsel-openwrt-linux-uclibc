@@ -1,0 +1,6 @@
+#!/bin/sh
+
+. $TOPDIR/include/site/mipsel-linux
+. $TOPDIR/include/site/linux-uclibc
+
+
